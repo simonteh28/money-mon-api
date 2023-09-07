@@ -1,0 +1,34 @@
+networks:
+  moneymonnetwork:
+    name: money-mon-network
+
+services:
+  db:
+    container_name: money-mon-db
+    image: postgres
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - moneymonnetwork
+  money-mon-api:
+    container_name: money-mon-api
+    build:
+      context: .
+      dockerfile: dockerfile
+    restart: on-failure:10
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    networks:
+      - moneymonnetwork
